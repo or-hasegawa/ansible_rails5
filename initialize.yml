@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+    - name: gitを最新版にするためのdevelをインストール
+      with_items:
+        - make
+        - libcurl-devel
+        - gcc
+        - openssl-devel
+        - expat-devel
+        - gettext
+        - asciidoc
+        - xmlto
+        - perl-ExtUtils-MakeMaker
+        - autoconf
+      yum: name={{ item }} state=installed
+
+    - name: 最新版のgitをclone
+      become_method: su
+      git: repo=git@github.com:git/git.git dest=/root/git accept_hostkey=yes
+
+    - name: gitをmake configure
+      become_method: su
+      command: make configure
+      args:
+        chdir: /root/git/
+
+    - name: gitをconfigure
+      become_method: su
+      command: ./configure --prefix=/usr/local --with-curl --with-expat
+      args:
+        chdir: /root/git/
+
+    - name: gitをmake all doc
+      become_method: su
+      command: make all doc
+      args:
+        chdir: /root/git/
+
+    - name: gitをmake install
+      become_method: su
+      command: make install install-doc install-html
+      args:
+        chdir: /root/git/
+
+    - name: localeの設定
+      command: localectl set-locale LANG=ja_JP.utf8
+
+    - name: timezoneの設定
+      command: timedatectl set-timezone Asia/Tokyo
+
+    - name: yum install httpd
+      yum: name=httpd state=installed
+
+    - name: httpd の起動と自動起動設定
+      service: name=httpd state=running enabled=yes
