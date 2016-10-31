@@ -80,7 +80,7 @@
       file: path=/etc/httpd/conf.d/vhost state=directory
 
     - name: virtualhostを作成
-      template: src=template-vhost.j2 dest=/etc/httpd/conf.d/vhost/smart-contact.conf
+      template: src=template-vhost-sm.j2 dest=/etc/httpd/conf.d/vhost/smart-contact.conf
       notify: restart httpd
 
   handlers:
