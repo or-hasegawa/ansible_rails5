@@ -4,6 +4,8 @@
   become: yes
   become_user: root
   become_method: su
+  vars_files:
+    - vhost-sm.yml
   tasks:
     - name: gitを最新版にするためのdevelをインストール
       with_items:
@@ -48,15 +50,6 @@
     - name: timezoneの設定
       command: timedatectl set-timezone Asia/Tokyo
 
-    - name: yum install httpd
-      yum: name=httpd state=installed
-
-    - name: httpd の起動と自動起動設定
-      service: name=httpd state=running enabled=yes
-
-    - name: vhostディレクトリの作成
-      file: path=/etc/httpd/conf.d/vhost state=directory
-
     - name: rootユーザーのsshを禁止する
       lineinfile:
         dest=/etc/ssh/sshd_config
@@ -65,6 +58,34 @@
         line='PermitRootLogin no'
       notify: restart sshd
 
+    - name: yum install httpd
+      yum: name=httpd state=installed
+
+    - name: httpd の起動と自動起動設定
+      service: name=httpd state=running enabled=yes
+
+    - name: httpd.confをvirtualhost対応に
+      lineinfile:
+        dest=/etc/httpd/conf/httpd.conf
+        state=present
+        regexp="IncludeOptional conf.d/*.conf"
+        line="IncludeOptional conf.d/vhost/*.conf"
+
+    - name: httpd.confにNameVirtualHostを追加
+      lineinfile:
+        dest=/etc/httpd/conf/httpd.conf
+        line="NameVirtualHost *:80"
+
+    - name: vhostディレクトリの作成
+      file: path=/etc/httpd/conf.d/vhost state=directory
+
+    - name: virtualhostを作成
+      template: src=template-vhost.j2 dest=/etc/httpd/conf.d/vhost/smart-contact.conf
+      notify: restart httpd
+
   handlers:
     - name: restart sshd
       service: name=sshd state=restarted
+
+    - name: restart httpd
+      service: name=httpd state=restarted
