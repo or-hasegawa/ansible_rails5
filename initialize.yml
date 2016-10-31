@@ -2,6 +2,8 @@
 - hosts: localhost
   connection: local
   become: yes
+  become_user: root
+  become_method: su
   tasks:
     - name: gitを最新版にするためのdevelをインストール
       with_items:
@@ -18,29 +20,24 @@
       yum: name={{ item }} state=installed
 
     - name: 最新版のgitをclone
-      become_method: su
       git: repo=git@github.com:git/git.git dest=/root/git accept_hostkey=yes
 
     - name: gitをmake configure
-      become_method: su
       command: make configure
       args:
         chdir: /root/git/
 
-    - name: gitをconfigure
-      become_method: su
+    - name: git prefix 付きでconfigure
       command: ./configure --prefix=/usr/local --with-curl --with-expat
       args:
         chdir: /root/git/
 
     - name: gitをmake all doc
-      become_method: su
       command: make all doc
       args:
         chdir: /root/git/
 
     - name: gitをmake install
-      become_method: su
       command: make install install-doc install-html
       args:
         chdir: /root/git/
@@ -56,3 +53,18 @@
 
     - name: httpd の起動と自動起動設定
       service: name=httpd state=running enabled=yes
+
+    - name: vhostディレクトリの作成
+      file: path=/etc/httpd/conf.d/vhost state=directory
+
+    - name: rootユーザーのsshを禁止する
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        state=present
+        regexp='#PermitRootLogin yes'
+        line='PermitRootLogin no'
+      notify: restart sshd
+
+  handlers:
+    - name: restart sshd
+      service: name=sshd state=restarted
