@@ -65,6 +65,13 @@
     - name: httpd の起動と自動起動設定
       service: name=httpd state=running enabled=yes
 
+    - name: firewallにhttpdを追加
+      firewalld:
+        service=http
+        permanent=true
+        state=enabled
+        immediate=true
+
     - name: httpd.confをvirtualhost対応に
       lineinfile:
         dest=/etc/httpd/conf/httpd.conf
