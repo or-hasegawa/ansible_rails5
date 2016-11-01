@@ -1,9 +1,9 @@
 <VirtualHost *:80>
-    ServerAdmin {{ sm_server_admin }}
-    DocumentRoot {{ sm_document_root }}
-    ServerName {{ sm_server_name }}
-    ErrorLog /var/log/httpd/{{ sm_log_dir }}/error_log
-    Userdir {{ sm_user_dir | default('disabled') }}
+    ServerAdmin {{ sc_a_server_admin }}
+    DocumentRoot {{ sc_a_document_root }}
+    ServerName {{ sc_a_server_name }}
+    ErrorLog /var/log/httpd/{{ sc_a_log_dir }}/error_log
+    Userdir {{ sc_a_user_dir | default('disabled') }}
 
     SetEnvIf Request_URI "\.swf$" nolog=swf
     SetEnvIf Request_URI "\.txt$" nolog=txt
@@ -17,10 +17,10 @@
     SetEnvIf Request_URI "\.js$" nolog=js
     SetEnvIf Remote_Addr "127.0.0.1" nolog=local
 
-    CustomLog /var/log/httpd/{{ sm_log_dir }}/access_log combined env=!nolog
+    CustomLog /var/log/httpd/{{ sc_a_log_dir }}/access_log combined env=!nolog
 
-    {% if sm_user_dir is defined %}
-    <Directory "/home/{{ sm_user }}/{{ sm_user_dir }}">
+    {% if sc_a_user_dir is defined %}
+    <Directory "/home/{{ sc_a_user }}/{{ sc_a_user_dir }}">
       AllowOverride All
       Options All
       Require all granted

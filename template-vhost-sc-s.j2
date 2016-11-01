@@ -1,0 +1,49 @@
+<VirtualHost *:80>
+    ServerAdmin {{ sc_s_server_admin }}
+    DocumentRoot {{ sc_s_document_root }}
+    ServerName {{ sc_s_server_name }}
+    ErrorLog /var/log/httpd/{{ sc_s_log_dir }}/error_log
+    Userdir {{ sc_s_user_dir | default('disabled') }}
+
+    SetEnvIf Request_URI "\.swf$" nolog=swf
+    SetEnvIf Request_URI "\.txt$" nolog=txt
+    SetEnvIf Request_URI "\.ico$" nolog=ico
+    SetEnvIf Request_URI "\.gif$" nolog=gif
+    SetEnvIf Request_URI "\.jpg$" nolog=jpg
+    SetEnvIf Request_URI "\.JPG$" nolog=JPG
+    SetEnvIf Request_URI "\.jpeg$" nolog=jpeg
+    SetEnvIf Request_URI "\.png$" nolog=png
+    SetEnvIf Request_URI "\.css$" nolog=css
+    SetEnvIf Request_URI "\.js$" nolog=js
+    SetEnvIf Remote_Addr "127.0.0.1" nolog=local
+
+    CustomLog /var/log/httpd/{{ sc_s_log_dir }}/access_log combined env=!nolog
+
+    {% if sc_s_user_dir is defined %}
+    <Directory "/home/{{ sc_s_user }}/{{ sc_s_user_dir }}">
+      AllowOverride All
+      Options All
+      Require all granted
+    </Directory>
+    {% endif %}
+
+    <IfModule deflate_module>
+        DeflateCompressionLevel 9
+        #DeflateFilterNote Input instream
+        #DeflateFilterNote Output outstream
+        #DeflateFilterNote Ratio ratio
+        #LogFormat '"%r" %{outstream}n/%{instream}n (%{ratio}n%%) %T' deflate
+        #CustomLog /var/log/httpd/deflate_log deflate
+
+        <Location />
+          SetOutputFilter DEFLATE
+          AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+
+          BrowserMatch ^Mozilla/4 gzip-only-text/html
+          BrowserMatch ^Mozilla/4\.0[678] no-gzip
+          BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
+          SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip dont-vary
+          #Header append Vary User-Agent env=!dont-vary
+        </Location>
+    </IfModule>
+</VirtualHost>

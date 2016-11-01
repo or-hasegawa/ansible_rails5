@@ -5,7 +5,8 @@
   become_user: root
   become_method: su
   vars_files:
-    - vhost-sm.yml
+    - vhost-sc-s.yml
+    - vhost-sc-a.yml
   tasks:
     - name: gitを最新版にするためのdevelをインストール
       with_items:
@@ -74,13 +75,18 @@
     - name: httpd.confにNameVirtualHostを追加
       lineinfile:
         dest=/etc/httpd/conf/httpd.conf
+        regexp="NameVirtualHost *:80"
         line="NameVirtualHost *:80"
 
     - name: vhostディレクトリの作成
       file: path=/etc/httpd/conf.d/vhost state=directory
 
     - name: virtualhostを作成
-      template: src=template-vhost-sm.j2 dest=/etc/httpd/conf.d/vhost/smart-contact.conf
+      template: src=template-vhost-sc-s.j2 dest=/etc/httpd/conf.d/vhost/smart-contact_service.conf
+      notify: restart httpd
+
+    - name: virtualhostを作成
+      template: src=template-vhost-sc-a.j2 dest=/etc/httpd/conf.d/vhost/smart-contact_admin.conf
       notify: restart httpd
 
   handlers:
