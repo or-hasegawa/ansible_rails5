@@ -96,6 +96,13 @@
       template: src=template-vhost-sc-a.j2 dest=/etc/httpd/conf.d/vhost/smart-contact_admin.conf
       notify: restart httpd
 
+    - name: SELinuxの無効化　
+      lineinfile:
+        dest=/etc/selinux/config
+        state=present
+        regexp="SELINUX=enforcing"
+        line="SELINUX=disabled"
+
   handlers:
     - name: restart sshd
       service: name=sshd state=restarted
